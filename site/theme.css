@@ -1,0 +1,52 @@
+/* =====================================================================
+   nixfish / site / theme.css
+   Project-specific theme override for the foss/v1 design system.
+   Only touches the tokens documented as "safe to override" in the
+   design-corbet-ch project-pages theming contract — retints the accent
+   hue to a pink, distinct from every sibling (nixarch teal, nixvps amber,
+   nixram emerald, nixapps violet, nixgpu red, nixk3s blue, nixremote lime).
+
+   Load order:
+     <link rel="stylesheet" href="https://v1.foss.design.corbet.ch/assets/base.css">
+     <link rel="stylesheet" href="./theme.css">
+   ===================================================================== */
+
+:root {
+  /* Dark mode (and default) accent — pink-400. */
+  --accent: #f472b6;
+  --accent-hover: #f9a8d4;
+  --accent-dim: rgba(244, 114, 182, 0.12);
+  --accent-glow: rgba(244, 114, 182, 0.08);
+  --accent-text: #0b1120;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Darker pink for light mode — #be185d on #ffffff is ~6.0:1,
+       comfortably AA for normal text (computed via WCAG relative
+       luminance, not eyeballed). */
+    --accent: #be185d;
+    --accent-hover: #9d174d;
+    --accent-dim: rgba(190, 24, 93, 0.08);
+    --accent-glow: rgba(190, 24, 93, 0.06);
+    --accent-text: #ffffff;
+  }
+}
+
+/* Mirror both variants for the explicit data-theme toggle, so it wins
+   over the OS media query in both directions. */
+:root[data-theme="dark"] {
+  --accent: #f472b6;
+  --accent-hover: #f9a8d4;
+  --accent-dim: rgba(244, 114, 182, 0.12);
+  --accent-glow: rgba(244, 114, 182, 0.08);
+  --accent-text: #0b1120;
+}
+
+:root[data-theme="light"] {
+  --accent: #be185d;
+  --accent-hover: #9d174d;
+  --accent-dim: rgba(190, 24, 93, 0.08);
+  --accent-glow: rgba(190, 24, 93, 0.06);
+  --accent-text: #ffffff;
+}

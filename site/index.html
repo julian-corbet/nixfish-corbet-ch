@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>nixfish &mdash; The safe-adoption pattern for declarative fish shell config over Nix</title>
+  <meta name="description" content="nixfish is the documented, verified sequence for turning a real machine's already-non-empty fish config into declarative home-manager config without silently destroying it — plus the one piece of fish state (universal variables) that genuinely can't be declared the normal way. Pre-alpha, one real module.">
+
+  <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+  <meta property="og:title" content="nixfish">
+  <meta property="og:description" content="The safe-adoption pattern for declarative fish shell config over Nix — a one-time backup flag, never a permanent config option, plus declarative universal variables.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://nixfish.corbet.ch">
+
+  <link rel="stylesheet" href="https://v1.foss.design.corbet.ch/assets/base.css">
+  <link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+
+<header class="hero">
+  <nav>
+    <a href="/" class="nav-brand">nixfish</a>
+    <div class="nav-links">
+      <a href="https://github.com/julian-corbet/nixfish-corbet-ch">GitHub</a>
+      <a href="#status">Status</a>
+      <a href="#roadmap">Roadmap</a>
+    </div>
+  </nav>
+
+  <div class="hero-content">
+    <h1>nixfish</h1>
+    <p class="tagline">Your fish config, as code &mdash; safely adopted, not overwritten.</p>
+    <p class="subtitle">
+      <code>programs.fish.enable = true</code> already exists in
+      home-manager. What's missing is the part nobody writes down: on a
+      real machine, <code>config.fish</code> is almost never empty. nixfish
+      is the documented, verified adoption sequence &mdash; a one-time
+      backup flag, never <code>force = true</code> &mdash; plus the one
+      piece of fish state that genuinely can't be declared the normal way.
+    </p>
+    <div class="cta">
+      <a href="#status" class="btn btn-primary">Read the Status</a>
+      <a href="https://github.com/julian-corbet/nixfish-corbet-ch" class="btn btn-secondary">View on GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="status" class="how-it-works">
+  <div class="container">
+    <h2>Status: pre-alpha, one real module, one real migration</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">&check;</div>
+        <h3>Extracted from an actual migration, not a demo</h3>
+        <p>
+          One real module (<code>fish</code>), documenting a real
+          migration &mdash; a vendor fish config and a personal dotfile
+          pile, both plain hand-maintained files, moved to Nix for the
+          first time. The core claim (a pre-existing <code>config.fish</code>
+          makes <code>home-manager switch</code> refuse rather than
+          silently overwrite, and <code>-b &lt;ext&gt;</code> is the
+          correct fix, not <code>force = true</code>) was verified by
+          reading home-manager's actual module source, not assumed from
+          docs.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-num">!</div>
+        <h3>Universal variables can't be a managed file</h3>
+        <p>
+          <code>set -U</code> state lives in a separate persisted file
+          home-manager's own fish module never touches.
+          <code>universalVariables</code> converges it via an idempotent
+          <code>shellInit</code> command instead &mdash; correct, but it
+          means nixfish never "owns" that file the way it owns
+          <code>config.fish</code>, and can't detect drift in it the way a
+          managed file would.
+        </p>
+      </div>
+      <div class="step">
+        <div class="step-num">!</div>
+        <h3>No test suite yet</h3>
+        <p>
+          Not exercised against every home-manager version in the wild
+          &mdash; verified against the one pinned revision this was
+          actually built and migrated on.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="container">
+    <h2>What it does</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h3>Safe adoption, not silent overwrite</h3>
+        <p>
+          Flip <code>programs.fish.enable</code> blind on a machine with a
+          real <code>config.fish</code> and <code>home-manager switch</code>
+          refuses to activate &mdash; correct, but a wall, not a plan.
+          nixfish documents the actual sequence: activate once with a
+          backup flag, diff the backup against what you expected, confirm
+          a fresh shell still works, then delete the backup. Never a
+          standing default.
+        </p>
+      </div>
+      <div class="feature">
+        <h3>Declarative universal variables</h3>
+        <p>
+          <code>universalVariables</code> takes a plain attrset (prompt
+          colors, pager colors, anything normally set via <code>set -U</code>)
+          and converges it as idempotent <code>shellInit</code> commands
+          &mdash; the one corner of fish state that has no managed-file
+          equivalent in home-manager's own module.
+        </p>
+      </div>
+      <div class="feature">
+        <h3>Composes with your own config</h3>
+        <p>
+          <code>programs.fish.shellInit</code>,
+          <code>.shellAliases</code>, and <code>.functions</code> stay
+          entirely yours &mdash; nixfish's own contributions merge
+          alongside them (<code>types.lines</code> merges across multiple
+          contributions) rather than replacing anything.
+        </p>
+      </div>
+      <div class="feature">
+        <h3>Zero coupling to Arch, Wayland, or forwarding</h3>
+        <p>
+          Deliberately independent of nixarch and nixremote &mdash; the
+          adoption problem this solves has nothing to do with either.
+          Only depends on <code>nixpkgs</code>, so it can reach anything
+          with a shell.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="container">
+    <h2>Get started</h2>
+    <div class="install-grid">
+      <div class="install-method">
+        <h3>1. Add the flake input</h3>
+        <pre><code>inputs.nixfish.url = "github:julian-corbet/nixfish-corbet-ch";</code></pre>
+      </div>
+      <div class="install-method">
+        <h3>2. Import and declare</h3>
+        <pre><code>imports = [ inputs.nixfish.homeManagerModules.fish ];
+
+nixfish.fish = {
+  enable = true;
+  universalVariables = {
+    fish_color_normal = "F0F0F0";
+    fish_color_command = "22C55E";
+  };
+};</code></pre>
+      </div>
+      <div class="install-method">
+        <h3>3. First-time adoption (existing config.fish)</h3>
+        <pre><code>home-manager switch --flake .#you@host -b hm-bak</code></pre>
+        <p>
+          Diff the <code>.hm-bak</code> file against what you ported,
+          confirm a fresh shell works, then delete the backup. Never leave
+          <code>backupFileExtension</code> configured as a standing
+          default.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roadmap" class="architecture">
+  <div class="container">
+    <h2>Roadmap (planned, not yet built)</h2>
+    <div class="arch-details">
+      <div class="arch-detail">
+        <h3>A home-manager-free sibling</h3>
+        <p>
+          For machines where home-manager itself would be disproportionate
+          weight (a minimal survival-mode VPS). Deliberately not built yet
+          &mdash; the one fleet case that prompted the question was better
+          served by a couple of lines directly in that project's own
+          modules, with no cross-repo dependency. Worth revisiting if a
+          second genuine case shows up.
+        </p>
+      </div>
+      <div class="arch-detail">
+        <h3>Declarative bash adoption</h3>
+        <p>
+          <code>programs.bash</code> has the identical wholesale-ownership
+          model and the identical <code>-b</code>/<code>force</code>
+          mechanics &mdash; the same documentation applies, just not yet
+          written up as its own option surface here.
+        </p>
+      </div>
+      <div class="arch-detail">
+        <h3>Integration tests</h3>
+        <p>
+          Exercising the actual collision/backup behavior against a real
+          pre-existing file, not just eval-time type checks.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/julian-corbet/nixfish-corbet-ch">Source</a>
+      <a href="https://github.com/julian-corbet/nixfish-corbet-ch/issues">Issues</a>
+    </div>
+    <p>
+      <a href="https://github.com/julian-corbet/nixfish-corbet-ch/blob/main/LICENSE">MIT</a> &middot;
+      <a href="https://github.com/julian-corbet">Julian Corbet</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
